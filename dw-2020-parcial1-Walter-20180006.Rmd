@@ -1,0 +1,143 @@
+---
+title: "dw-2020-parcial-1"
+author: "Tepi"
+date: "9/3/2020"
+output: rmarkdown::github_document
+
+---
+
+# Examen parcial
+
+Indicaciones generales:
+
+* Usted tiene el período de la clase para resolver el examen parcial.
+* La entrega del parcial, al igual que las tareas, es por medio de su cuenta de github, pegando el link en el portal de MiU.
+
+
+* Pueden hacer uso del material del curso e internet (stackoverflow, etc.). Sin embargo, si encontramos algún indicio de copia, se anulará el exámen para los estudiantes involucrados. Por lo tanto, aconsejamos no compartir las agregaciones que generen. 
+
+## Sección I: Preguntas teóricas.
+
+* Existen 10 preguntas directas en este Rmarkdown, de las cuales usted deberá responder 5. Las 5 a responder estarán determinadas por un muestreo aleatorio basado en su número de carné.
+
+* Ingrese su número de carné en  `set.seed()` y corra el chunk de R para determinar cuáles preguntas debe responder.
+
+
+```{r, echo=TRUE, cache=TRUE}
+
+set.seed(20180006) 
+v<- 1:10
+preguntas <-sort(sample(v, size = 5, replace = FALSE ))
+
+paste0("Mis preguntas a resolver son: ",paste0(preguntas,collapse = ", "))
+
+```
+```{r cache=TRUE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(tidyr)
+library(reshape2)
+library(readr)
+```
+
+### Listado de preguntas teóricas
+
+1. Para las siguientes sentencias de `base R`, liste su contraparte de `dplyr`:
+    * `str()`
+    * `df[,c("a","b")]`
+    * `names(df)[4] <- "new_name"` donde la posición 4 corresponde a la variable `old_name`
+    * `df[df$variable == "valor",]`
+    
+    
+2. Al momento de filtrar en SQL, ¿cuál keyword cumple las mismas funciones que el keyword `OR`  para filtrar uno o más elementos una misma columna? El keyword **IN** es el que cumple la misma función que un "OR". Normalmente se utiliza primero **WHERE** *columna* **IN** (aqui irian los valores separados por coma); 
+
+3. ¿Por qué en R utilizamos funciones de la familia apply (lapply,vapply) en lugar de utilizar ciclos?
+
+4. ¿Cuál es la diferencia entre utilizar `==` y `=` en R? El "==" lo utilizamos cuando queremos hacer comparaciones lógicas. Es decir si queremos verificar si son iguales las variables o resultados de comparación. Si la comparación resulta ser igual, normalmente nos devuelve un TRUE. Mientras que si es falsa nos devolvería un FALSE. El "=" nos sirve para asignar valores a variables. Estas variables pueden ser funciones, datasets, un valor único, etc. 
+
+5. ¿Cuál es la forma correcta de cargar un archivo de texto donde el delimitador es `:`?
+Usamos el siguiente código, con la librería *readr*, especificando que el archivo de texto tiene un delimitador ":"
+```{r echo=FALSE}
+df_texto <- readr::read_delim("archivo.txt", delim = ":")
+```
+
+
+6. ¿Qué es un vector y en qué se diferencia en una lista en R?
+Los vectores son de solo un tipo, sean de tipo logicos/boolean, númericos, o character. Las listas normalmente son utilizadas para dataframes y estas pueden incluso tener una lista dentro de ella misma. Las listas pueden tener una combinación de varios tipos de datos a diferencia de los vectores.
+
+
+7. ¿Qué pasa si quiero agregar una nueva categoría a un factor que no se encuentra en los niveles existentes?
+
+8. Si en un dataframe, a una variable de tipo `factor` le agrego un nuevo elemento que *no se encuentra en los niveles existentes*, ¿cuál sería el resultado esperado y por qué?
+    * El nuevo elemento
+    * `NA`
+Nos devolvería NA dado a que ya existen niveles asociados con todas las observaciones dentro del dataset. 
+    
+9. En SQL, ¿para qué utilizamos el keyword `HAVING`?
+
+10. Si quiero obtener como resultado las filas de la tabla A que no se encuentran en la tabla B, ¿cómo debería de completar la siguiente sentencia de SQL?
+
+    * SELECT * FROM A _______ B ON A.KEY = B.KEY WHERE __________ = __________
+  
+Extra: ¿Cuántos posibles exámenes de 5 preguntas se pueden realizar utilizando como banco las diez acá presentadas?
+(responder con código de R.)
+
+
+## Sección II Preguntas prácticas.
+
+
+* Conteste las siguientes preguntas utilizando sus conocimientos de R. Adjunte el código que utilizó para llegar a sus conclusiones en un chunk del markdown.
+
+A. De los clientes que están en más de un país,¿cuál cree que es el más rentable y por qué?
+
+B. Estrategia de negocio ha decidido que ya no operará en aquellos territorios cuyas pérdidas sean "considerables". Bajo su criterio, ¿cuáles son estos territorios y por qué ya no debemos operar ahí?
+
+
+
+
+
+
+
+
+### I. Preguntas teóricas
+
+
+## A
+El más rentable es "a17a7558" porque es el que tiene la mayor cantidad de monto comprado combinando en los 2 paises.
+```{r cache=TRUE}
+df_parcial <- readRDS("parcial_anonimo.rds")
+c1 <- df_parcial[df_parcial$Pais == "4046ee34",]
+c1 <- subset(c1, select = c(Cliente, Venta))
+c1 <- c1 %>% group_by(Cliente) %>%
+  summarise(Ventas = sum(Venta))
+row.names(c1) <- c1$Cliente
+c2 <- df_parcial[df_parcial$Pais == "4f03bd9b",]
+c2 <- subset(c2, select = c(Cliente, Venta))
+c2 <- c2 %>% group_by(Cliente) %>%
+  summarise(Ventas = sum(Venta))
+row.names(c2) <- c2$Cliente
+data_clientes <- merge(c1, c2, by = 0)
+data_clientes$Venta_Total <- data_clientes$Ventas.x+data_clientes$Ventas.y
+data_clientes <- data_clientes[,c(1,6)]
+top <- arrange(data_clientes, -Venta_Total)
+```
+
+
+
+
+## B
+La pérdida media entre todos los territorios que sí tienen pérdidas es de Q860.33 (asumimos que son Q). Por lo cual tenemos un parámetro de los rangos de pérdida que tienen los territorios. No consideraremos a todos los territorios con pérdidas como ineficientes, pues sabemos que no siempre se obtienen ganancias constantes en los negocios. Adicionalmente, hay que dar un margen de tiempo para ver si logran recuperarse ciertos territorios. Sin embargo, queremos ponerle enfoque a los territorios que tienen una magnitud de pérdida significante. Para esto, consideraremos todos los territorios que están arriba de una desviación estándar de la media como con pérdidas considerables. 
+```{r cache=TRUE}
+territorios <- df_parcial[df_parcial$Venta < 0, ]
+tn <- territorios %>% group_by(Territorio) %>%
+  summarise(Perdidas_Totales = sum(Venta))
+tnf <- arrange(tn, Perdidas_Totales)
+analisis <- mean(tnf$Perdidas_Totales)
+analisis
+limite <- -sd(tnf$Perdidas_Totales)
+limite
+```
+Los siguientes territorios tienen pérdidas considerables y ya no deberían operar 
+```{r cache=TRUE}
+considerables <- tnf[tnf$Perdidas_Totales<limite, ]
+considerables
+```
